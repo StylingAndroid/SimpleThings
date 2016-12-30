@@ -4,4 +4,6 @@ public interface Factory {
     DataCollector getDataCollector();
 
     Consumer getTemperatureConsumer();
+
+    Consumer getPressureConsumer();
 }

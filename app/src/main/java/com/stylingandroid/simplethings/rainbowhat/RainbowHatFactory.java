@@ -24,6 +24,11 @@ public class RainbowHatFactory implements Factory {
         return new RainbowHatTemperatureDisplay();
     }
 
+    @Override
+    public Consumer getPressureConsumer() {
+        return new RainbowHatPressureDisplay();
+    }
+
     SensorEventListener getSensorEventListener(Consumer consumer) {
         return new RainbowHatSensorEventListener(consumer);
     }

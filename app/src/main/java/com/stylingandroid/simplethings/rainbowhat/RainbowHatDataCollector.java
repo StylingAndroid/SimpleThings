@@ -22,6 +22,7 @@ class RainbowHatDataCollector implements DataCollector {
     private Bmx280SensorDriver sensorDriver = null;
     private DynamicSensorCallback dynamicSensorCallback;
     private SensorEventListener temperatureListener;
+    private SensorEventListener pressureListener;
 
     RainbowHatDataCollector(Context context, RainbowHatFactory factory) {
         this.context = context;
@@ -29,18 +30,20 @@ class RainbowHatDataCollector implements DataCollector {
     }
 
     @Override
-    public void register(final Consumer temperatureConsumer) {
-        registerSensorListeners(temperatureConsumer);
+    public void register(final Consumer temperatureConsumer, final Consumer pressureConsumer) {
+        registerSensorListeners(temperatureConsumer, pressureConsumer);
         registerSensors();
     }
 
-    private void registerSensorListeners(final Consumer temperatureConsumer) {
+    private void registerSensorListeners(final Consumer temperatureConsumer, final Consumer pressureConsumer) {
         final SensorManager sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
-        dynamicSensorCallback = createDynamicSensorCallback(temperatureConsumer, sensorManager);
+        dynamicSensorCallback = createDynamicSensorCallback(temperatureConsumer, pressureConsumer, sensorManager);
         sensorManager.registerDynamicSensorCallback(dynamicSensorCallback);
     }
 
-    private DynamicSensorCallback createDynamicSensorCallback(final Consumer temperatureConsumer, final SensorManager sensorManager) {
+    private DynamicSensorCallback createDynamicSensorCallback(final Consumer temperatureConsumer,
+                                                              final Consumer pressureConsumer,
+                                                              final SensorManager sensorManager) {
         return new DynamicSensorCallback() {
             @Override
             public void onDynamicSensorConnected(Sensor sensor) {
@@ -49,12 +52,19 @@ class RainbowHatDataCollector implements DataCollector {
                     temperatureListener = factory.getSensorEventListener(temperatureConsumer);
                     sensorManager.registerListener(temperatureListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
                 }
+                if (sensor.getType() == Sensor.TYPE_PRESSURE) {
+                    pressureListener = factory.getSensorEventListener(pressureConsumer);
+                    sensorManager.registerListener(pressureListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+                }
             }
 
             @Override
             public void onDynamicSensorDisconnected(Sensor sensor) {
                 if (sensor.getType() == Sensor.TYPE_AMBIENT_TEMPERATURE) {
                     sensorManager.unregisterListener(temperatureListener);
+                }
+                if (sensor.getType() == Sensor.TYPE_PRESSURE) {
+                    sensorManager.unregisterListener(pressureListener);
                 }
                 super.onDynamicSensorDisconnected(sensor);
             }
@@ -65,6 +75,7 @@ class RainbowHatDataCollector implements DataCollector {
         try {
             sensorDriver = RainbowHat.createSensorDriver();
             sensorDriver.registerTemperatureSensor();
+            sensorDriver.registerPressureSensor();
         } catch (IOException e) {
             sensorDriver = null;
             e.printStackTrace();
@@ -72,7 +83,7 @@ class RainbowHatDataCollector implements DataCollector {
     }
 
     @Override
-    public void unregister(Consumer temperatureConsumer) {
+    public void unregister() {
         try {
             final SensorManager sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
             sensorManager.unregisterDynamicSensorCallback(dynamicSensorCallback);

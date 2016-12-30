@@ -9,6 +9,7 @@ public class MainActivity extends Activity {
 
     private DataCollector dataCollector;
     private Consumer temperatureConsumer;
+    private Consumer pressureConsumer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,14 +18,17 @@ public class MainActivity extends Activity {
         RainbowHatFactory factory = new RainbowHatFactory(this);
         dataCollector = factory.getDataCollector();
         temperatureConsumer = factory.getTemperatureConsumer();
+        pressureConsumer = factory.getPressureConsumer();
         temperatureConsumer.onCreate();
-        dataCollector.register(temperatureConsumer);
+        pressureConsumer.onCreate();
+        dataCollector.register(temperatureConsumer, pressureConsumer);
     }
 
     @Override
     protected void onDestroy() {
-        dataCollector.unregister(temperatureConsumer);
+        dataCollector.unregister();
         temperatureConsumer.onDestroy();
+        pressureConsumer.onDestroy();
 
         super.onDestroy();
     }
