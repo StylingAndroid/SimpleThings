@@ -14,20 +14,13 @@ class RainbowHatPressureDisplay implements Consumer {
     private static final int MIN_PRESSURE = 97;
     private static final int BRIGHTNESS = 1;
 
-    private Apa102 ledStrip;
-
     private int[] colours = new int[LED_COUNT];
 
     private int lastPressure = -1;
 
     @Override
     public void onCreate() {
-        try {
-            ledStrip = new Apa102(RainbowHat.BUS_LEDSTRIP, Apa102.Mode.BGR, Apa102.Direction.REVERSED);
-            ledStrip.setBrightness(BRIGHTNESS);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //NO-OP
     }
 
     @Override
@@ -51,7 +44,14 @@ class RainbowHatPressureDisplay implements Consumer {
         } else if (newPressure < colours.length - 1) {
             colours[newPressure + 1] = Color.YELLOW;
         }
-        setLeds();
+        try {
+            Apa102 ledStrip = new Apa102(RainbowHat.BUS_LEDSTRIP, Apa102.Mode.BGR, Apa102.Direction.REVERSED);
+            ledStrip.setBrightness(BRIGHTNESS);
+            ledStrip.write(colours);
+            ledStrip.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void resetColours() {
@@ -60,25 +60,8 @@ class RainbowHatPressureDisplay implements Consumer {
         }
     }
 
-    private void setLeds() {
-        try {
-            ledStrip.write(colours);
-            ledStrip.write(colours);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void onDestroy() {
-        if (ledStrip != null) {
-            try {
-                resetColours();
-                setLeds();
-                ledStrip.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        //NO-OP
     }
 }
